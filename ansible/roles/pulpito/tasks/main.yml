@@ -1,0 +1,63 @@
+---
+
+- name: install pulpito dependencies
+  apt:
+    update_cache: yes
+    name:
+      - gcc
+    state: present
+
+- name: create pulpito system user
+  user:
+    name: pulpito
+    shell: /bin/bash
+    state: present
+
+- name: checkout pulpito
+  become: yes
+  become_user: pulpito
+  git:
+    repo: https://github.com/ceph/pulpito.git
+    dest: /home/pulpito/pulpito
+
+- name: create virtualenv
+  become: yes
+  become_user: pulpito
+  command: virtualenv ./virtualenv
+  args:
+    chdir: /home/pulpito/pulpito
+
+- name: create pulpito config
+  become: yes
+  become_user: pulpito
+  template:
+    src: pulpito_config.py.j2
+    dest: /home/pulpito/pulpito/prod.py
+    mode: 0644
+
+- name: install required python packages
+  become: yes
+  become_user: pulpito
+  command: /bin/bash -c "source ./virtualenv/bin/activate && pip install -r requirements.txt"
+  args:
+    chdir: /home/pulpito/pulpito
+
+- name: create pulpito run script
+  become: yes
+  become_user: pulpito
+  copy:
+    src: run-pulpito.sh
+    dest: /home/pulpito/run-pulpito.sh
+    mode: 0755
+
+- name: create pulpito service
+  copy:
+    src: pulpito.service
+    dest: /etc/systemd/system/pulpito.service
+    mode: 0644
+
+- name: enable and start pulpito service
+  systemd:
+    name: pulpito
+    state: started
+    enabled: yes

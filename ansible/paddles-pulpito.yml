@@ -1,0 +1,12 @@
+---
+
+- hosts: paddles
+  gather_facts: true
+  roles:
+    - paddles
+    - dnsmasq
+
+- hosts: pulpito
+  gather_facts: true
+  roles:
+    - pulpito

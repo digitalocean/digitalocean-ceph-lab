@@ -1,0 +1,121 @@
+---
+
+- name: install paddles dependencies
+  apt:
+    update_cache: yes
+    name:
+      - git
+      - python-dev
+      - python-virtualenv
+      - postgresql
+      - postgresql-contrib
+      - postgresql-server-dev-all
+    state: present
+
+- name: generate password for paddles postgres user
+  shell: "date | md5sum | cut -f1 -d' ' | tr -d '\n'"
+  register: pg_password
+
+- name: create paddles postgres user
+  become: yes
+  become_user: postgres
+  command: psql
+  args:
+    stdin: "CREATE USER paddles WITH PASSWORD '{{ pg_password.stdout }}'"
+
+- name: create paddles postgres db
+  become: yes
+  become_user: postgres
+  command: createdb paddles
+
+- name: create paddles system user
+  user:
+    name: paddles  
+    shell: /bin/bash
+    state: present
+
+- name: checkout paddles
+  become: yes
+  become_user: paddles
+  git:
+    repo: https://github.com/ceph/paddles.git
+    dest: /home/paddles/paddles
+
+- name: update requirements.txt for postgres 10 compatibility
+  become: yes
+  become_user: paddles
+  lineinfile:
+    path: /home/paddles/paddles/requirements.txt
+    line: "psycopg2==2.7.5"
+    regexp: "^psycopg2==2.6"
+
+- name: create virtualenv
+  become: yes
+  become_user: paddles
+  command: virtualenv ./virtualenv
+  args:
+    chdir: /home/paddles/paddles
+
+- name: create paddles config
+  become: yes
+  become_user: paddles
+  template:
+    src: paddles_config.py.j2
+    dest: /home/paddles/paddles/config.py
+    mode: 0644
+
+- name: install required python packages
+  become: yes
+  become_user: paddles
+  command: /bin/bash -c "source ./virtualenv/bin/activate && pip install -r requirements.txt"
+  args:
+    chdir: /home/paddles/paddles
+
+- name: set up paddles
+  become: yes
+  become_user: paddles
+  command: /bin/bash -c "source ./virtualenv/bin/activate && python setup.py develop"
+  args:
+    chdir: /home/paddles/paddles
+
+- name: populate paddles database
+  become: yes
+  become_user: paddles
+  command: /bin/bash -c "source ./virtualenv/bin/activate && pecan populate config.py"
+  args:
+    chdir: /home/paddles/paddles
+
+- name: create alembic config
+  become: yes
+  become_user: paddles
+  template:
+    src: alembic.ini.j2
+    dest: /home/paddles/paddles/alembic.ini
+    mode: 0644
+
+- name: stamp alembic db
+  become: yes
+  become_user: paddles
+  command: /bin/bash -c "source ./virtualenv/bin/activate && alembic stamp head"
+  args:
+    chdir: /home/paddles/paddles
+
+- name: create paddles run script
+  become: yes
+  become_user: paddles
+  copy:
+    src: run-paddles.sh
+    dest: /home/paddles/run-paddles.sh
+    mode: 0755
+
+- name: create paddles service
+  copy:
+    src: paddles.service
+    dest: /etc/systemd/system/paddles.service
+    mode: 0644
+
+- name: enable and start paddles service
+  systemd:
+    name: paddles
+    state: started
+    enabled: yes

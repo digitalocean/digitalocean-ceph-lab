@@ -1,0 +1,11 @@
+[Unit]
+Description=Paddles
+After=network.target
+
+[Service]
+ExecStart=/home/paddles/run-paddles.sh
+Restart=on-failure
+User=paddles
+
+[Install]
+WantedBy=multi-user.target

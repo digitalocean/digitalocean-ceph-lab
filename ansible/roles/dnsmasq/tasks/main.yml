@@ -1,0 +1,8 @@
+---
+
+- name: install dnsmasq
+  apt:
+    update_cache: yes
+    name:
+      - dnsmasq
+    state: present

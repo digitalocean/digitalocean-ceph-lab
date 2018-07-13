@@ -1,0 +1,11 @@
+[Unit]
+Description=Pulpito
+After=network.target
+
+[Service]
+ExecStart=/home/pulpito/run-pulpito.sh
+Restart=on-failure
+User=pulpito
+
+[Install]
+WantedBy=multi-user.target
