@@ -1,0 +1,12 @@
+[Unit]
+Description=Teuthology Log Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python2.7 -m SimpleHTTPServer
+WorkingDirectory=/home/teuthworker/archive
+Restart=on-failure
+User=teuthworker
+
+[Install]
+WantedBy=multi-user.target

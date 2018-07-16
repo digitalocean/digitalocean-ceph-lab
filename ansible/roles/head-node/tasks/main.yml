@@ -191,3 +191,29 @@
   shell: >
     ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
     "echo '{{ ansible_host }} head-node.{{ lab_domain }}' >> /etc/hosts"
+
+- name: create log server service
+  copy:
+    src: log-server.service
+    dest: /etc/systemd/system/log-server.service
+    mode: 0644
+
+- name: enable and start log server service
+  systemd:
+    name: log-server
+    state: started
+    enabled: yes
+
+- name: update paddles config with log server address
+  become: yes
+  become_user: teuthology
+  shell: >
+    ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
+    "sed -i 's/REPLACE-ME-WITH-HEAD-NODE-ADDR/{{ ansible_host }}/' /home/paddles/paddles/config.py"
+
+- name: restart paddles
+  become: yes
+  become_user: teuthology
+  shell: >
+    ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
+    "systemctl restart paddles.service"
