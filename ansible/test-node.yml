@@ -1,0 +1,6 @@
+---
+
+- hosts: test-node
+  gather_facts: true
+  roles:
+    - test-node

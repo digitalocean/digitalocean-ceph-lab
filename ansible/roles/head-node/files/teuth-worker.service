@@ -1,0 +1,12 @@
+[Unit]
+Description=Teuthology Worker
+After=network.target
+
+[Service]
+ExecStart=/home/teuthworker/bin/start-teuth-worker.sh
+Type=forking
+Restart=on-failure
+User=teuthworker
+
+[Install]
+WantedBy=multi-user.target

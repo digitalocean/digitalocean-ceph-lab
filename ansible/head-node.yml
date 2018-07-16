@@ -1,0 +1,6 @@
+---
+
+- hosts: head-node
+  gather_facts: true
+  roles:
+    - head-node

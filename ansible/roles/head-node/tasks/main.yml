@@ -1,0 +1,193 @@
+---
+
+- name: point DNS at the paddles node
+  lineinfile:
+    path: /etc/systemd/resolved.conf
+    line: "DNS={{ paddles_node_ip }}"
+    regexp: "DNS="
+    state: present
+
+- name: restart systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: restarted
+
+- name: install head node packages
+  apt:
+    update_cache: yes
+    name:
+      - git
+      - python-dev
+      - python-pip
+      - python-virtualenv
+      - libevent-dev
+      - python-libvirt
+      - beanstalkd
+      - libssl-dev
+      - libev-dev
+      - libvirt-dev
+      - libmysqlclient-dev
+      - libffi-dev
+      - libyaml-dev
+    state: present
+
+- name: create teuthology config file
+  template:
+    src: teuthology.yaml.j2
+    dest: /etc/teuthology.yaml
+    mode: 0644
+
+- name: disable ssh host key checking
+  lineinfile:
+    path: /etc/ssh/ssh_config
+    line: "    StrictHostKeyChecking no"
+    regexp: "StrictHostKeyChecking"
+    state: present
+
+- name: create teuthology system user
+  user:
+    name: teuthology
+    shell: /bin/bash
+    state: present
+
+- name: create teuthworker system user
+  user:
+    name: teuthworker
+    shell: /bin/bash
+    state: present
+
+- name: enable passwordless sudo for teuthology and teuthworker
+  lineinfile:
+    dest: /etc/sudoers.d/teuthology
+    line: "{{ item }} ALL=(root) NOPASSWD: ALL"
+    create: yes
+  with_items:
+    - "teuthology"
+    - "teuthworker"
+
+- name: create .ssh directory for teuthology
+  become: yes
+  become_user: teuthology
+  file:
+    path: /home/teuthology/.ssh
+    state: directory
+    mode: 0700
+
+- name: place teuthology user ssh key
+  become: yes
+  become_user: teuthology
+  blockinfile:
+    path: /home/teuthology/.ssh/id_rsa
+    marker: ""
+    mode: 0600
+    block: |
+      {{ ssh_priv_key }}
+    create: yes
+
+- name: create .ssh directory for teuthworker
+  become: yes
+  become_user: teuthworker
+  file:
+    path: /home/teuthworker/.ssh
+    state: directory
+    mode: 0700
+
+- name: place teuthworker user ssh key
+  become: yes
+  become_user: teuthworker
+  blockinfile:
+    path: /home/teuthworker/.ssh/id_rsa
+    marker: ""
+    mode: 0600
+    block: |
+      {{ ssh_priv_key }}
+    create: yes
+
+- name: create teuthology src directory
+  become: yes
+  become_user: teuthology
+  file:
+    path: /home/teuthology/src
+    state: directory
+
+- name: clone teuthology for teuthology
+  become: yes
+  become_user: teuthology
+  command: git clone https://github.com/ceph/teuthology.git teuthology_master
+  args:
+    chdir: /home/teuthology/src
+
+- name: bootstrap teuthology for teuthology
+  become: yes
+  become_user: teuthology
+  shell: ./bootstrap
+  args:
+    chdir: /home/teuthology/src/teuthology_master
+
+- name: automatically activate virutalenv for teuthology
+  become: yes
+  become_user: teuthology
+  lineinfile:
+    path: /home/teuthology/.profile
+    line: "source $HOME/src/teuthology_master/virtualenv/bin/activate"
+    state: present
+
+- name: create teuthworker directories
+  become: yes
+  become_user: teuthworker
+  file:
+    path: "/home/teuthworker/{{ item }}"
+    state: directory
+  with_items:
+    - "src"
+    - "bin"
+    - "archive/worker_logs"
+
+- name: clone teuthology for teuthworker
+  become: yes
+  become_user: teuthworker
+  command: git clone https://github.com/ceph/teuthology.git teuthology_master
+  args:
+    chdir: /home/teuthworker/src
+
+- name: bootstrap teuthology for teuthworker
+  become: yes
+  become_user: teuthworker
+  shell: ./bootstrap
+  args:
+    chdir: /home/teuthworker/src/teuthology_master
+
+- name: get worker start script
+  become: yes
+  become_user: teuthworker
+  get_url:
+    url: https://raw.githubusercontent.com/ceph/teuthology/master/docs/_static/worker_start.sh
+    dest: /home/teuthworker/bin/worker_start
+    mode: 0755
+
+- name: create worker startup script
+  become: yes
+  become_user: teuthworker
+  copy:
+    src: start-teuth-worker.sh
+    dest: /home/teuthworker/bin/start-teuth-worker.sh
+    mode: 0755
+
+- name: create worker service
+  copy:
+    src: teuth-worker.service
+    dest: /etc/systemd/system/teuth-worker.service
+    mode: 0644
+
+- name: enable and start worker service
+  systemd:
+    name: teuth-worker
+    state: started
+    enabled: yes
+
+- name: register node with paddles DNS
+  become: yes
+  become_user: teuthology
+  shell: >
+    ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
+    "echo '{{ ansible_host }} head-node.{{ lab_domain }}' >> /etc/hosts"

@@ -1,0 +1,91 @@
+---
+
+- name: point DNS at the paddles node (systemd)
+  lineinfile:
+    path: /etc/systemd/resolved.conf
+    line: "DNS={{ paddles_ip }}"
+    regexp: "DNS="
+    state: present
+  when: ansible_distribution_version >= "16.04"
+
+- name: restart systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: restarted
+  when: ansible_distribution_version >= "16.04"
+
+- name: point DNS at the paddles node (resolvconf)
+  lineinfile:
+    path: /etc/resolvconf/resolv.conf.d/head
+    line: "nameserver {{ paddles_ip }}"
+    state: present
+  when: ansible_distribution_version < "16.04"
+
+- name: kick resolvconf
+  service:
+    name: resolvconf
+    state: restarted
+  when: ansible_distribution_version < "16.04"
+
+- name: disable ssh host key checking
+  lineinfile:
+    path: /etc/ssh/ssh_config
+    line: "    StrictHostKeyChecking no"
+    regexp: "StrictHostKeyChecking"
+    state: present
+
+- name: create ubuntu system user
+  user:
+    name: ubuntu
+    shell: /bin/bash
+    state: present
+
+- name: enable passwordless sudo for ubuntu
+  lineinfile:
+    dest: /etc/sudoers.d/teuthology
+    line: "ubuntu ALL=(root) NOPASSWD: ALL"
+    create: yes
+
+- name: configure passwordless ssh for ubuntu user
+  become: yes
+  become_user: ubuntu
+  lineinfile:
+    path: /home/ubuntu/.ssh/authorized_keys
+    line: "{{ ssh_pub_key }}"
+    create: yes
+
+- name: place root ssh key
+  blockinfile:
+    path: /root/.ssh/id_rsa
+    marker: ""
+    mode: 0600
+    block: |
+      {{ ssh_priv_key }}
+    create: yes
+
+- name: create scratch_devs file
+  shell: "ls -1 /dev/sd* > /scratch_devs"
+
+- name: register node with paddles DNS
+  shell: >
+    ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_ip }}
+    "echo '{{ ansible_host }} test-node-{{ node_index }}.{{ lab_domain }}' >> /etc/hosts"
+
+- name: submit node to paddles
+  uri:
+    url: "http://{{ paddles_ip }}:8080/nodes/"
+    method: POST
+    body_format: json
+    headers:
+      Accept: "application/json"
+      Content-type: "application/json"
+    body:
+      name: "test-node-{{ node_index }}.{{ lab_domain }}"
+      user: "ubuntu"
+      arch: "x86_64"
+      os_type: "ubuntu"
+      os_version: "{{ ansible_distribution_version }}"
+      locked: false
+      machine_type: "ubuntu"
+      ssh_pub_key: "ssh-rsa {{ ansible_ssh_host_key_rsa_public }}"
+      up: true
