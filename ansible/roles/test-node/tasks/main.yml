@@ -6,26 +6,26 @@
     line: "DNS={{ paddles_ip }}"
     regexp: "DNS="
     state: present
-  when: ansible_distribution_version >= "16.04"
+  when: ansible_distribution_version > "16.04"
 
 - name: restart systemd-resolved
   systemd:
     name: systemd-resolved
     state: restarted
-  when: ansible_distribution_version >= "16.04"
+  when: ansible_distribution_version > "16.04"
 
 - name: point DNS at the paddles node (resolvconf)
   lineinfile:
     path: /etc/resolvconf/resolv.conf.d/head
     line: "nameserver {{ paddles_ip }}"
     state: present
-  when: ansible_distribution_version < "16.04"
+  when: ansible_distribution_version <= "16.04"
 
 - name: kick resolvconf
   service:
     name: resolvconf
     state: restarted
-  when: ansible_distribution_version < "16.04"
+  when: ansible_distribution_version <= "16.04"
 
 - name: disable ssh host key checking
   lineinfile:
