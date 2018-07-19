@@ -1,4 +1,4 @@
 #!/bin/bash
 
 source ~/src/teuthology_master/virtualenv/bin/activate
-~/bin/worker_start ubuntu 1
+~/bin/worker_start ubuntu {{ num_teuth_workers }}

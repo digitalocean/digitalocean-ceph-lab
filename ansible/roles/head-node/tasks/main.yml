@@ -168,8 +168,8 @@
 - name: create worker startup script
   become: yes
   become_user: teuthworker
-  copy:
-    src: start-teuth-worker.sh
+  template:
+    src: start-teuth-worker.sh.j2
     dest: /home/teuthworker/bin/start-teuth-worker.sh
     mode: 0755
 
