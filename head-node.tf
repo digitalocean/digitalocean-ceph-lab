@@ -30,7 +30,7 @@ resource "digitalocean_droplet" "head_node" {
         paddles_node_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address_private}"
         paddles_public_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address}"
         lab_domain = "${var.lab_name}"
-        num_teuth_workers = "${floor(var.test_node_count / 3)}"
+        num_teuth_workers = "${var.test_node_count}"
       }
     }
 
