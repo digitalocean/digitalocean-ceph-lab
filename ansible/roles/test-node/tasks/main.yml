@@ -66,10 +66,28 @@
 - name: create scratch_devs file
   shell: "ls -1 /dev/sd* > /scratch_devs"
 
+- name: remove node from paddles DNS
+  shell: >
+    ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_ip }}
+    "sed -i '/test-node-{{ node_index }}/ d' /etc/hosts"
+
 - name: register node with paddles DNS
   shell: >
     ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_ip }}
     "echo '{{ ansible_host }} test-node-{{ node_index }}.{{ lab_domain }}' >> /etc/hosts"
+
+- name: fetch existing node from paddles
+  uri:
+    url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
+    method: GET
+    body_format: json
+    return_content: yes
+    headers:
+      Accept: "application/json"
+    status_code:
+      - 404
+      - 200
+  register: existing_node_response
 
 - name: submit node to paddles
   uri:
@@ -89,3 +107,23 @@
       machine_type: "ubuntu"
       ssh_pub_key: "ssh-rsa {{ ansible_ssh_host_key_rsa_public }}"
       up: true
+  when: existing_node_response.status == 404
+
+- name: update node in paddles
+  uri:
+    url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
+    method: PUT
+    body_format: json
+    headers:
+      Accept: "application/json"
+      Content-type: "application/json"
+    body:
+      arch: "x86_64"
+      os_type: "ubuntu"
+      os_version: "{{ ansible_distribution_version }}"
+      locked: false
+      machine_type: "ubuntu"
+      ssh_pub_key: "ssh-rsa {{ ansible_ssh_host_key_rsa_public }}"
+      up: true
+      locked_by: "{{ existing_node_response.json.locked_by }}"
+  when: existing_node_response.status == 200
