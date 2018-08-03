@@ -109,7 +109,7 @@
       up: true
   when: existing_node_response.status == 404
 
-- name: update node in paddles
+- name: update and unlock node in paddles
   uri:
     url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
     method: PUT
@@ -126,4 +126,25 @@
       ssh_pub_key: "ssh-rsa {{ ansible_ssh_host_key_rsa_public }}"
       up: true
       locked_by: "{{ existing_node_response.json.locked_by }}"
-  when: existing_node_response.status == 200
+  when:
+    - existing_node_response.status == 200
+    - existing_node_response.json.locked
+
+- name: update node in paddles
+  uri:
+    url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
+    method: PUT
+    body_format: json
+    headers:
+      Accept: "application/json"
+      Content-type: "application/json"
+    body:
+      arch: "x86_64"
+      os_type: "ubuntu"
+      os_version: "{{ ansible_distribution_version }}"
+      machine_type: "ubuntu"
+      ssh_pub_key: "ssh-rsa {{ ansible_ssh_host_key_rsa_public }}"
+      up: true
+  when:
+    - existing_node_response.status == 200
+    - not existing_node_response.json.locked
