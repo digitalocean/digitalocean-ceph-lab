@@ -132,6 +132,14 @@
     line: "source $HOME/src/teuthology_master/virtualenv/bin/activate"
     state: present
 
+- name: create overrides file for teuthology
+  become: yes
+  become_user: teuthology
+  copy:
+    src: overrides.yml
+    path: /home/teuthology/overrides.yml
+    mode: 0644
+
 - name: create teuthworker directories
   become: yes
   become_user: teuthworker

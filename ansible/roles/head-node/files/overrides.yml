@@ -1,0 +1,3 @@
+overrides:
+  ansible.cephlab:
+    skip_tags: user,hostname,ssh,resolvconf,secondary-nic
