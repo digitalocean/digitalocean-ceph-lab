@@ -32,9 +32,7 @@ the lab environment.
 You will need:
 * [terraform](https://www.terraform.io/)
 * [ansible](https://www.ansible.com/)
-* [terraform-provisioner-ansible](https://github.com/radekg/terraform-provisioner-ansible)
-    - NOTE: As of this writing, [a patch](https://github.com/radekg/terraform-provisioner-ansible/pull/53)
-      is needed for the provisioner to work correctly.
+* [terraform-provisioner-ansible](https://github.com/radekg/terraform-provisioner-ansible) v2.0.1 or later
 
 The provided Dockerfile will create a container image containing all of the
 above.

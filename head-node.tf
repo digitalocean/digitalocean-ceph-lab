@@ -22,7 +22,9 @@ resource "digitalocean_droplet" "head_node" {
 
   provisioner "ansible" {
     plays = {
-      playbook = "ansible/head-node.yml"
+      playbook = {
+        file_path = "ansible/head-node.yml"
+      }
       groups = ["head-node"]
       extra_vars {
         ssh_priv_key = "${var.ssh_priv_key}"
@@ -33,7 +35,5 @@ resource "digitalocean_droplet" "head_node" {
         num_teuth_workers = "${var.test_node_count}"
       }
     }
-
-    local = "yes"
   }
 }

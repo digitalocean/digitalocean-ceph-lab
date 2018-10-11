@@ -22,13 +22,13 @@ resource "digitalocean_droplet" "paddles_pulpito" {
 
   provisioner "ansible" {
     plays = {
-      playbook = "ansible/paddles-pulpito.yml"
+      playbook = {
+        file_path = "ansible/paddles-pulpito.yml"
+      }
       groups = ["paddles","pulpito"]
       extra_vars {
         paddles_listen_ip = "${self.ipv4_address_private}"
       }
     }
-
-    local = "yes"
   }
 }

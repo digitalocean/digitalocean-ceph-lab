@@ -34,7 +34,9 @@ resource "digitalocean_droplet" "test_node" {
 
   provisioner "ansible" {
     plays = {
-      playbook = "ansible/test-node.yml"
+      playbook = {
+        file_path = "ansible/test-node.yml"
+      }
       groups = ["test-node"]
       extra_vars {
         ssh_priv_key = "${var.ssh_priv_key}"
@@ -44,8 +46,6 @@ resource "digitalocean_droplet" "test_node" {
         node_index = "${count.index}"
       }
     }
-
-    local = "yes"
   }
 
   count = "${var.test_node_count}"
