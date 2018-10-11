@@ -126,15 +126,17 @@
 - name: clone teuthology for teuthology
   become: yes
   become_user: teuthology
-  command: git clone https://github.com/ceph/teuthology.git teuthology_master
-  args:
-    chdir: /home/teuthology/src
+  git:
+    repo: https://github.com/ceph/teuthology.git
+    dest: /home/teuthology/src/teuthology_master
+    version: master
 
 - name: bootstrap teuthology for teuthology
   become: yes
   become_user: teuthology
-  shell: ./bootstrap
+  command: ./bootstrap
   args:
+    creates: /home/teuthology/src/teuthology_master/virtualenv
     chdir: /home/teuthology/src/teuthology_master
 
 - name: automatically activate virutalenv for teuthology
@@ -150,7 +152,7 @@
   become_user: teuthology
   copy:
     src: overrides.yml
-    path: /home/teuthology/overrides.yml
+    dest: /home/teuthology/overrides.yml
     mode: 0644
 
 - name: create teuthworker directories
@@ -167,15 +169,17 @@
 - name: clone teuthology for teuthworker
   become: yes
   become_user: teuthworker
-  command: git clone https://github.com/ceph/teuthology.git teuthology_master
-  args:
-    chdir: /home/teuthworker/src
+  git:
+    repo: https://github.com/ceph/teuthology.git
+    dest: /home/teuthworker/src/teuthology_master
+    version: master
 
 - name: bootstrap teuthology for teuthworker
   become: yes
   become_user: teuthworker
-  shell: ./bootstrap
+  command: ./bootstrap
   args:
+    creates: /home/teuthworker/src/teuthology_master/virtualenv
     chdir: /home/teuthworker/src/teuthology_master
 
 - name: get worker start script
@@ -209,9 +213,10 @@
 - name: register node with paddles DNS
   become: yes
   become_user: teuthology
-  shell: >
+  command: >
     ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
     "echo '{{ ansible_host }} head-node.{{ lab_domain }}' >> /etc/hosts"
+  changed_when: true
 
 - name: create log server service
   copy:
@@ -228,13 +233,15 @@
 - name: update paddles config with log server address
   become: yes
   become_user: teuthology
-  shell: >
+  command: >
     ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
     "sed -i 's/REPLACE-ME-WITH-HEAD-NODE-ADDR/{{ ansible_host }}/' /home/paddles/paddles/config.py"
+  changed_when: true
 
 - name: restart paddles
   become: yes
   become_user: teuthology
-  shell: >
+  command: >
     ssh -oStrictHostKeyChecking=no -i /home/teuthology/.ssh/id_rsa root@{{ paddles_public_ip }}
     "systemctl restart paddles.service"
+  changed_when: true

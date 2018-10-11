@@ -55,7 +55,8 @@ resource "digitalocean_droplet" "test_node" {
       extra_vars {
         ssh_priv_key = "${var.ssh_priv_key}"
         ssh_pub_key = "${var.ssh_pub_key}"
-        paddles_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address_private}"
+        paddles_node_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address_private}"
+        paddles_public_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address}"
         lab_domain = "${var.lab_name}"
         node_index = "${count.index}"
       }

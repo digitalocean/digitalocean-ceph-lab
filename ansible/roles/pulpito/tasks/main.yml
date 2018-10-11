@@ -32,6 +32,7 @@
   git:
     repo: https://github.com/ceph/pulpito.git
     dest: /home/pulpito/pulpito
+    version: master
 
 - name: create virtualenv
   become: yes
@@ -39,6 +40,7 @@
   command: virtualenv ./virtualenv
   args:
     chdir: /home/pulpito/pulpito
+    creates: /home/pulpito/pulpito/virtualenv
 
 - name: create pulpito config
   become: yes
@@ -51,9 +53,9 @@
 - name: install required python packages
   become: yes
   become_user: pulpito
-  command: /bin/bash -c "source ./virtualenv/bin/activate && pip install -r requirements.txt"
-  args:
-    chdir: /home/pulpito/pulpito
+  pip:
+    requirements: /home/pulpito/pulpito/requirements.txt
+    virtualenv: /home/pulpito/pulpito/virtualenv
 
 - name: create pulpito run script
   become: yes
