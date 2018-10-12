@@ -1,3 +1,16 @@
+# Copyright 2018 DigitalOcean
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 ---
 
 - name: install pulpito dependencies
@@ -19,6 +32,7 @@
   git:
     repo: https://github.com/ceph/pulpito.git
     dest: /home/pulpito/pulpito
+    version: master
 
 - name: create virtualenv
   become: yes
@@ -26,6 +40,7 @@
   command: virtualenv ./virtualenv
   args:
     chdir: /home/pulpito/pulpito
+    creates: /home/pulpito/pulpito/virtualenv
 
 - name: create pulpito config
   become: yes
@@ -38,9 +53,9 @@
 - name: install required python packages
   become: yes
   become_user: pulpito
-  command: /bin/bash -c "source ./virtualenv/bin/activate && pip install -r requirements.txt"
-  args:
-    chdir: /home/pulpito/pulpito
+  pip:
+    requirements: /home/pulpito/pulpito/requirements.txt
+    virtualenv: /home/pulpito/pulpito/virtualenv
 
 - name: create pulpito run script
   become: yes

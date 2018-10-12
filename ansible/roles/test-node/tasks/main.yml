@@ -1,9 +1,22 @@
+# Copyright 2018 DigitalOcean
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 ---
 
 - name: point DNS at the paddles node (systemd)
   lineinfile:
     path: /etc/systemd/resolved.conf
-    line: "DNS={{ paddles_ip }}"
+    line: "DNS={{ paddles_node_ip }}"
     regexp: "DNS="
     state: present
   when: ansible_distribution_version > "16.04"
@@ -17,7 +30,7 @@
 - name: point DNS at the paddles node (resolvconf)
   lineinfile:
     path: /etc/resolvconf/resolv.conf.d/head
-    line: "nameserver {{ paddles_ip }}"
+    line: "nameserver {{ paddles_node_ip }}"
     state: present
   when: ansible_distribution_version <= "16.04"
 
@@ -65,20 +78,24 @@
 
 - name: create scratch_devs file
   shell: "ls -1 /dev/sd* > /scratch_devs"
+  args:
+    creates: /scratch_devs
 
 - name: remove node from paddles DNS
-  shell: >
-    ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_ip }}
+  command: >
+    ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_node_ip }}
     "sed -i '/test-node-{{ node_index }}/ d' /etc/hosts"
+  changed_when: true
 
 - name: register node with paddles DNS
-  shell: >
-    ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_ip }}
+  command: >
+    ssh -oStrictHostKeyChecking=no -i /root/.ssh/id_rsa root@{{ paddles_node_ip }}
     "echo '{{ ansible_host }} test-node-{{ node_index }}.{{ lab_domain }}' >> /etc/hosts"
+  changed_when: true
 
 - name: fetch existing node from paddles
   uri:
-    url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
+    url: "http://{{ paddles_node_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
     method: GET
     body_format: json
     return_content: yes
@@ -91,7 +108,7 @@
 
 - name: submit node to paddles
   uri:
-    url: "http://{{ paddles_ip }}:8080/nodes/"
+    url: "http://{{ paddles_node_ip }}:8080/nodes/"
     method: POST
     body_format: json
     headers:
@@ -111,7 +128,7 @@
 
 - name: update and unlock node in paddles
   uri:
-    url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
+    url: "http://{{ paddles_node_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
     method: PUT
     body_format: json
     headers:
@@ -132,7 +149,7 @@
 
 - name: update node in paddles
   uri:
-    url: "http://{{ paddles_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
+    url: "http://{{ paddles_node_ip }}:8080/nodes/test-node-{{ node_index }}.{{ lab_domain }}/"
     method: PUT
     body_format: json
     headers:

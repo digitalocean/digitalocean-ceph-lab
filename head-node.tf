@@ -1,3 +1,17 @@
+# Copyright 2018 DigitalOcean
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 resource "digitalocean_droplet" "head_node" {
   image = "ubuntu-18-04-x64"
   name = "ceph-lab-${var.lab_name}-head-node"
@@ -22,7 +36,9 @@ resource "digitalocean_droplet" "head_node" {
 
   provisioner "ansible" {
     plays = {
-      playbook = "ansible/head-node.yml"
+      playbook = {
+        file_path = "ansible/head-node.yml"
+      }
       groups = ["head-node"]
       extra_vars {
         ssh_priv_key = "${var.ssh_priv_key}"
@@ -33,7 +49,5 @@ resource "digitalocean_droplet" "head_node" {
         num_teuth_workers = "${var.test_node_count}"
       }
     }
-
-    local = "yes"
   }
 }

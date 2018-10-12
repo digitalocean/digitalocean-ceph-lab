@@ -32,9 +32,7 @@ the lab environment.
 You will need:
 * [terraform](https://www.terraform.io/)
 * [ansible](https://www.ansible.com/)
-* [terraform-provisioner-ansible](https://github.com/radekg/terraform-provisioner-ansible)
-    - NOTE: As of this writing, [a patch](https://github.com/radekg/terraform-provisioner-ansible/pull/53)
-      is needed for the provisioner to work correctly.
+* [terraform-provisioner-ansible](https://github.com/radekg/terraform-provisioner-ansible) v2.0.1 or later
 
 The provided Dockerfile will create a container image containing all of the
 above.
@@ -64,6 +62,19 @@ Creating a lab environment takes three simple steps:
 Once the above have been run, you should be able to access pulpito on port 8081
 of the paddles/pulpito node, and submit tests as described in the next section.
 
+If, at some point, one of your test nodes becomes unusable (e.g., due to a test
+performing a bad kernel upgrade or config change), you can easily re-spin it
+using terraform. For example, to re-create test node 2, you would run:
+
+```console
+$ terraform taint digitalocean_droplet.test_node.2
+$ terraform apply -var-file=<your-vars-file>`
+```
+
+This will destroy the existing test node, create a new one, and configure it to
+take the old node's place in the test system, including updating DNS and the
+node's entry in paddles.
+
 ## Running Tests
 
 The easiest way to submit jobs is from the head node:
@@ -74,3 +85,24 @@ The easiest way to submit jobs is from the head node:
 
 Of course, with an appropriate teuthology configuration one should also be able
 to submit jobs remotely.
+
+## Contributing
+
+Contributions are welcome, in the form of either issues or pull requests. Plesae
+see the [contribution guidelines](CONTRIBUTING.md) for details.
+
+## License
+
+Copyright 2018 DigitalOcean
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
