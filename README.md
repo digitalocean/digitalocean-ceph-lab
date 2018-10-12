@@ -62,6 +62,19 @@ Creating a lab environment takes three simple steps:
 Once the above have been run, you should be able to access pulpito on port 8081
 of the paddles/pulpito node, and submit tests as described in the next section.
 
+If, at some point, one of your test nodes becomes unusable (e.g., due to a test
+performing a bad kernel upgrade or config change), you can easily re-spin it
+using terraform. For example, to re-create test node 2, you would run:
+
+```console
+$ terraform taint digitalocean_droplet.test_node.2
+$ terraform apply -var-file=<your-vars-file>`
+```
+
+This will destroy the existing test node, create a new one, and configure it to
+take the old node's place in the test system, including updating DNS and the
+node's entry in paddles.
+
 ## Running Tests
 
 The easiest way to submit jobs is from the head node:
