@@ -13,7 +13,8 @@ keep the following guidelines in mind.
 Pull requests are always welcome. Please:
 
 1. Test changes thoroughly before submitting a PR.
-2. Ensure your changes pass the relevant code checkers:
+2. Ensure your changes pass the relevant code checkers (these checks can be run
+   automatically with `make check`):
    * For Terraform, `terraform validate`.
    * For Ansible file, [`ansible-lint`](https://github.com/willthames/ansible-lint).
    * For shell scripts, [`shellcheck`](https://github.com/koalaman/shellcheck).
