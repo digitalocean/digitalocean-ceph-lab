@@ -16,6 +16,8 @@ language: minimal
 sudo: required
 services:
   - docker
+notifications:
+  email: false
 
 before_install:
   - docker pull koalaman/shellcheck:stable
