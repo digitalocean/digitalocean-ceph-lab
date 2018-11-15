@@ -16,19 +16,30 @@ check: shellcheck ansible-lint terraform-validate
 .PHONY: check
 
 shellcheck:
-	find . -name '*.sh' -exec shellcheck {} \;
+	find . -name '*.sh' \
+		-exec docker run -it --rm \
+		-v $(PWD):$(PWD) \
+		-w $(PWD) \
+		koalaman/shellcheck:stable {} \
+		\;
 .PHONY: shellcheck
 
 ansible-lint:
 	docker run -it --rm \
 		-v $(PWD):$(PWD) \
 		-w $(PWD) \
-		particlekit/ansible-lint \
+		particlekit/ansible-lint:latest \
 		ansible-lint ./ansible/*.yml
 .PHONY: ansible-lint
 
 terraform-validate:
 	docker build -t terraform-ansible:latest .
+	docker run -it --rm \
+		-v $(PWD):$(PWD) \
+		-w $(PWD) \
+		--entrypoint /bin/terraform \
+		terraform-ansible:latest \
+		init
 	docker run -it --rm \
 		-v $(PWD):$(PWD) \
 		-w $(PWD) \
