@@ -1,5 +1,7 @@
 # digitalocean-ceph-lab
 
+[![Build Status](https://travis-ci.org/digitalocean/digitalocean-ceph-lab.svg?branch=master)](https://travis-ci.org/digitalocean/digitalocean-ceph-lab)
+
 This repository contains terraform and ansible automation for setting up a
 complete ceph test environment using DigitalOcean Droplets and Volumes. Once
 provisioned, the environment can be used to run tests
