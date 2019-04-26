@@ -68,13 +68,11 @@
     create: yes
 
 - name: place root ssh key
-  blockinfile:
-    path: /root/.ssh/id_rsa
-    marker: ""
+  copy:
+    dest: /root/.ssh/id_rsa
     mode: 0600
-    block: |
+    content: |
       {{ ssh_priv_key }}
-    create: yes
 
 - name: create scratch_devs file
   shell: "ls -1 /dev/sd* > /scratch_devs"
