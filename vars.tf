@@ -12,19 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "lab_name" {}
-variable "region" {}
-variable "ssh_pub_key" {}
-variable "ssh_priv_key" {}
+
+
+variable "lab_name" {
+   default = "malceph-lab"
+}
+variable "region" {
+   default = "nyc3"
+}
+variable "ssh_pub_key" {
+	default = CHANGETOSSHKEY_STRING
+}
+variable "ssh_priv_key" {
+default = CHANGETOSSHPUBKEY_STRING
+}
 variable "test_node_image" {
-  default = "ubuntu-14-04-x64"
+  default = "ubuntu-18-04-x64"
 }
 variable "test_node_count" {
-  default = 10
+  default = 1
 }
 variable "vols_per_test_node" {
   default = 4
 }
 variable "test_vol_size" {
-  default = 10
+   default =  10
 }

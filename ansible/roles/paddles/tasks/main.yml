@@ -65,7 +65,16 @@
   lineinfile:
     path: /home/paddles/paddles/requirements.txt
     line: "psycopg2==2.7.5"
-    regexp: "^psycopg2==2.6"
+    #regexp: "^psycopg2==2.6"
+    regexp: "^psycopg2==2.7.7"
+
+- name: update requirements.txt for gunicorn
+  become: yes
+  become_user: paddles
+  lineinfile:
+    path: /home/paddles/paddles/requirements.txt
+    line: "gunicorn==19.10.0"
+    regexp: "^gunicorn==20.0.4"
 
 - name: create virtualenv
   become: yes

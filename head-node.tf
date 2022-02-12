@@ -23,24 +23,26 @@ resource "digitalocean_droplet" "head_node" {
   private_networking = true
 
   connection {
+    host = "${self.ipv4_address}"
     type = "ssh"
     private_key = "${var.ssh_priv_key}"
   }
 
   provisioner "remote-exec" {
     inline = [
+      "sudo killall apt apt-get",
       "apt-get update",
       "apt-get -y install python",
     ]
   }
 
   provisioner "ansible" {
-    plays = {
-      playbook = {
+    plays {
+      playbook {
         file_path = "ansible/head-node.yml"
       }
       groups = ["head-node"]
-      extra_vars {
+      extra_vars = {
         ssh_priv_key = "${var.ssh_priv_key}"
         ssh_pub_key = "${var.ssh_pub_key}"
         paddles_node_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address_private}"

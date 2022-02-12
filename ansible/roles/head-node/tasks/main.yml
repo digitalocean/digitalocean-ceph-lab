@@ -130,7 +130,7 @@
 - name: bootstrap teuthology for teuthology
   become: yes
   become_user: teuthology
-  command: ./bootstrap
+  command: ./bootstrap install && ./bootstrap
   args:
     creates: /home/teuthology/src/teuthology_master/virtualenv
     chdir: /home/teuthology/src/teuthology_master

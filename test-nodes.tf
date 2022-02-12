@@ -31,28 +31,30 @@ resource "digitalocean_droplet" "test_node" {
   ssh_keys = [
     "${digitalocean_ssh_key.ceph_lab.id}"
   ]
-  volume_ids = ["${slice(local.volume_ids, count.index*var.vols_per_test_node, count.index*var.vols_per_test_node+var.vols_per_test_node)}"]
+  volume_ids = "${slice(local.volume_ids, count.index*var.vols_per_test_node, count.index*var.vols_per_test_node+var.vols_per_test_node)}"
   private_networking = true
 
   connection {
+    host = "${self.ipv4_address}"
     type = "ssh"
     private_key = "${var.ssh_priv_key}"
   }
 
   provisioner "remote-exec" {
     inline = [
+      "sudo killall apt apt-get",
       "apt-get update",
       "apt-get -y install python",
     ]
   }
 
   provisioner "ansible" {
-    plays = {
-      playbook = {
+    plays {
+      playbook {
         file_path = "ansible/test-node.yml"
       }
       groups = ["test-node"]
-      extra_vars {
+      extra_vars = {
         ssh_priv_key = "${var.ssh_priv_key}"
         ssh_pub_key = "${var.ssh_pub_key}"
         paddles_node_ip = "${digitalocean_droplet.paddles_pulpito.ipv4_address_private}"

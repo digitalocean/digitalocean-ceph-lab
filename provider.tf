@@ -14,7 +14,8 @@
 
 provider "digitalocean" {
   token = "${var.do_token}"
-  version = "~> 0.1"
 }
 
-variable "do_token" {}
+variable "do_token" {
+   default = "CHANGETODOTOKEN_STRING"
+}

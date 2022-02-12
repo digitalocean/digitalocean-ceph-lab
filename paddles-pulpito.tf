@@ -23,24 +23,26 @@ resource "digitalocean_droplet" "paddles_pulpito" {
   private_networking = true
 
   connection {
+    host = "${self.ipv4_address}"
     type = "ssh"
     private_key = "${var.ssh_priv_key}"
   }
 
   provisioner "remote-exec" {
     inline = [
+      "sudo killall apt apt-get",
       "apt-get update",
       "apt-get -y install python",
     ]
   }
 
   provisioner "ansible" {
-    plays = {
-      playbook = {
+    plays {
+      playbook {
         file_path = "ansible/paddles-pulpito.yml"
       }
       groups = ["paddles","pulpito"]
-      extra_vars {
+      extra_vars = {
         paddles_listen_ip = "${self.ipv4_address_private}"
       }
     }
